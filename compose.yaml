@@ -1,0 +1,53 @@
+# LangSDK with Docker Compose (Compose v2.24+).
+#
+#   docker compose up -d --build            web UI + API on http://127.0.0.1:8001
+#   docker compose logs -f app              first start downloads the embedding model into the cache volume
+#   docker compose run --rm ingest          build or update the index (stop `app` first: see below)
+#   docker compose run --rm -T mcp          MCP stdio server, for an agent's MCP config
+#
+# Embedded Qdrant locks data/vectorstore, so only one process can open the index at a time: stop the app before
+# ingesting (`docker compose stop app`), and don't run ui.py on the host against the same folder at the same time.
+
+x-langsdk: &langsdk
+  build: .
+  image: langsdk:latest
+  # Keys and settings come from .env, read at run time and never copied into the image (.dockerignore).
+  env_file:
+    - path: .env
+      required: false
+  environment:
+    # The data folder is mounted at /app/data, so pin the paths to it whatever .env says.
+    DATA_DIR: data
+    VECTORSTORE_PATH: data/vectorstore
+    LANGFUSE_ENABLED: "false"
+    LANGFUSE_PUBLIC_KEY: ""
+    LANGFUSE_SECRET_KEY: ""
+    LANGSMITH_TRACING: "false"
+    LANGSMITH_API_KEY: ""
+    LANGCHAIN_TRACING_V2: "false"
+  volumes:
+    - ./data:/app/data          # data/docs, data/urls.txt and the index, shared with the host
+    - model-cache:/cache        # Hugging Face and FastEmbed downloads, kept across rebuilds
+
+services:
+  app:
+    <<: *langsdk
+    ports:
+      - "127.0.0.1:8001:8001"   # localhost only, like `python ui.py`
+    restart: unless-stopped
+
+  ingest:
+    <<: *langsdk
+    profiles: [tools]
+    command: ["python", "rag.py", "ingest"]
+    restart: "no"
+
+  mcp:
+    <<: *langsdk
+    profiles: [tools]
+    command: ["python", "mcp_server.py"]
+    stdin_open: true
+    restart: "no"
+
+volumes:
+  model-cache:

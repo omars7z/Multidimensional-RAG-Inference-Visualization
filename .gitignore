@@ -1,0 +1,23 @@
+.venv/
+# Environment files can contain API keys; intentionally exclude examples too.
+.env*
+*.env
+.env
+env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.credentials
+*.secret
+*.token
+credentials/
+secrets/
+data/
+.claude
+__pycache__/
+.pytest_cache/
+data/vectorstore/
+web/node_modules/
+web/dist/
+evals/results/

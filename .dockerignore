@@ -1,0 +1,63 @@
+# Build context for the Dockerfile. Rules are matched from the context root, in order; a later `!` rule re-includes.
+
+# --- Secrets: keys come from .env at run time (compose env_file), never from the image ---
+**/.env
+**/.env.*
+**/env.example
+**/*.env
+**/*.pem
+**/*.key
+**/*.p12
+**/*.pfx
+**/*.credentials
+**/*.secret
+**/*.token
+**/credentials/
+**/secrets/
+
+# --- Local state: data/ (docs, urls.txt, the index) is mounted as a volume ---
+data/
+evals/results/
+
+# --- Environments, caches and build output ---
+.venv/
+venv/
+env/
+**/__pycache__/
+**/*.py[cod]
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+**/node_modules/
+web/dist/
+web/.vite/
+
+# --- Editor, OS and tool clutter ---
+.git/
+.gitignore
+.claude/
+.vscode/
+.idea/
+**/*.swp
+**/*~
+**/.DS_Store
+**/Thumbs.db
+**/*.log
+**/npm-debug.log*
+
+# --- Not needed at run time ---
+docs/
+skills/
+*.md
+Dockerfile
+.dockerignore
+compose*.yaml
+compose*.yml
+docker-compose*.yaml
+docker-compose*.yml
+
+# The tests' fixture documents are .md files; keep them so `pytest` works in the container.
+!tests/fixtures/**

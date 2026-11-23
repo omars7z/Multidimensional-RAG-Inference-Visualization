@@ -1,0 +1,64 @@
+/* Immersive view: always a dark space, whatever the page theme. */
+body.sp-lock { overflow: hidden; }
+.space { position: fixed; inset: 0; z-index: 50; background: #02040a; color: #e9edf5; font: 14px/1.5 "Segoe UI", "Noto Sans Arabic", system-ui, sans-serif; overflow: hidden; user-select: none; }
+.space canvas { display: block; touch-action: none; cursor: grab; }
+.space canvas:active { cursor: grabbing; }
+/* Solid panels, no backdrop blur: blurring a canvas that changes every frame is costly on integrated GPUs. */
+.sp-glass { position: absolute; z-index: 30; background: rgba(9, 13, 26, .86); border: 1px solid rgba(140, 170, 255, .18); border-radius: 16px;
+  box-shadow: 0 12px 32px -16px rgba(0, 0, 0, .9), inset 0 1px 0 rgba(255, 255, 255, .06); }
+.sp-k { font: 600 10.5px/1.2 ui-monospace, "Cascadia Mono", Consolas, monospace; letter-spacing: .14em; text-transform: uppercase; color: #8b97b5; }
+.sp-btn { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border-radius: 10px; border: 1px solid rgba(140, 170, 255, .22); background: rgba(255, 255, 255, .04);
+  color: #dfe6f5; font: inherit; font-size: 13px; cursor: pointer; transition: background .15s, border-color .15s; }
+.sp-btn:hover { background: rgba(255, 255, 255, .09); border-color: rgba(160, 190, 255, .45); }
+.sp-btn:disabled { opacity: .35; cursor: default; }
+.sp-btn.primary { background: linear-gradient(135deg, #2fe6b5, #1aa985); color: #03140e; border: 0; font-weight: 650; box-shadow: 0 8px 22px -8px #2fe6b5; }
+.sp-btn.on { border-color: #7df5ff; color: #7df5ff; box-shadow: inset 0 0 0 1px #7df5ff55, 0 0 16px -4px #7df5ff; }
+.sp-btn .ico { width: 15px; height: 15px; }
+.sp-top { top: 16px; left: 16px; display: flex; align-items: center; gap: 14px; padding: 8px 16px 8px 8px; }
+.sp-brand b { display: block; font-size: 14px; letter-spacing: .01em; }
+.sp-brand span { font-size: 11.5px; color: #8b97b5; }
+.sp-stage { top: 16px; right: 16px; width: 380px; max-width: calc(100vw - 32px); padding: 16px; border-top: 2px solid var(--c); }
+.sp-stage-head { display: flex; gap: 12px; align-items: center; }
+.sp-num { flex: none; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; font: 700 14px ui-monospace, Consolas, monospace; color: var(--c);
+  background: color-mix(in srgb, var(--c) 16%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 45%, transparent), 0 0 22px -6px var(--c); }
+.sp-stage h3 { margin: 2px 0 0; font-size: 16px; line-height: 1.25; }
+.sp-stage p { margin: 10px 0 0; font-size: 12.5px; color: #b8c2d9; }
+.sp-stage code, .sp-near code { display: block; margin-top: 8px; font: 11px ui-monospace, Consolas, monospace; color: #7f8aa6; }
+.space dl { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 10px 0 0; }
+.space dl div { padding: 6px 9px; border-radius: 9px; background: rgba(255, 255, 255, .04); border: 1px solid rgba(255, 255, 255, .06); min-width: 0; }
+.space dt { font: 600 9.5px/1.3 ui-monospace, Consolas, monospace; letter-spacing: .1em; text-transform: uppercase; color: #7f8aa6; }
+.space dd { margin: 1px 0 0; font: 12.5px/1.35 ui-monospace, Consolas, monospace; color: #eef2fb; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; unicode-bidi: plaintext; }
+.sp-note, .sp-warn { margin-top: 10px; font-size: 12px; color: #ffcf87; }
+.sp-ctrl { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+.sp-ticks { display: flex; gap: 3px; margin-top: 12px; }
+.sp-ticks button { flex: 1; height: 5px; border: 0; padding: 0; border-radius: 3px; background: rgba(255, 255, 255, .1); cursor: pointer; }
+.sp-ticks button.past { background: color-mix(in srgb, var(--c) 55%, transparent); }
+.sp-ticks button.cur { background: var(--c); box-shadow: 0 0 10px var(--c); height: 7px; margin-top: -1px; }
+.sp-ticks button.skip { background: repeating-linear-gradient(90deg, rgba(255, 255, 255, .15) 0 3px, transparent 3px 5px); }
+.sp-places { left: 16px; top: 84px; width: 190px; padding: 12px; display: grid; gap: 3px; }
+.sp-place { display: flex; align-items: center; gap: 9px; padding: 6px 8px; border: 0; border-radius: 9px; background: transparent; color: #cfd8ec; font: inherit; font-size: 13px; text-align: left; cursor: pointer; }
+.sp-place:hover { background: rgba(255, 255, 255, .07); color: #fff; }
+.sp-place i { width: 9px; height: 9px; border-radius: 3px; background: var(--c, #7df5ff); box-shadow: 0 0 10px var(--c, #7df5ff); flex: none; }
+.sp-seg { display: flex; gap: 4px; margin-top: 4px; }
+.sp-seg button { flex: 1; padding: 4px 0; border-radius: 8px; border: 1px solid rgba(255, 255, 255, .1); background: transparent; color: #9aa6c2; font: inherit; font-size: 12px; text-transform: capitalize; cursor: pointer; }
+.sp-seg button[aria-pressed=true] { background: rgba(125, 245, 255, .12); color: #7df5ff; border-color: #7df5ff66; }
+.sp-near { left: 50%; bottom: 18px; transform: translateX(-50%); width: 520px; max-width: calc(100vw - 32px); padding: 14px 16px; border-left: 3px solid var(--c); animation: sp-in .35s ease both; }
+.sp-near h3 { margin: 2px 0 0; font-size: 17px; color: #fff; text-shadow: 0 0 18px var(--c); }
+.sp-near p { margin: 6px 0 0; font-size: 12.5px; color: #b8c2d9; }
+.sp-near dl { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+@keyframes sp-in { from { opacity: 0; transform: translate(-50%, 10px); } }
+.sp-map { position: absolute; z-index: 30; right: 16px; bottom: 16px; width: 200px; height: 200px; cursor: crosshair; }
+.sp-map .frame { fill: rgba(10, 14, 28, .62); stroke: rgba(140, 170, 255, .2); }
+.sp-map .road { stroke: #7b93ff; stroke-width: 2; opacity: .6; }
+.sp-map .gal { fill: rgba(255, 179, 71, .08); stroke: rgba(255, 179, 71, .5); stroke-dasharray: 2 3; }
+.sp-map .pk { fill: #fff; }
+.sp-map .me { fill: #7df5ff; }
+.sp-map text { fill: #7f8aa6; font: 9px ui-monospace, Consolas, monospace; }
+.sp-help { left: 16px; bottom: 16px; padding: 10px 14px; font-size: 12px; color: #aab4cc; display: grid; gap: 4px; max-width: 300px; }
+.sp-help kbd { display: inline-block; min-width: 18px; padding: 0 5px; margin-right: 2px; border-radius: 5px; border: 1px solid rgba(255, 255, 255, .2); border-bottom-width: 2px; font: 11px ui-monospace, Consolas, monospace; color: #e9edf5; text-align: center; }
+.sp-loading { left: 50%; top: 50%; transform: translate(-50%, -50%); padding: 14px 20px; font-size: 13px; color: #b8c2d9; }
+.sp-fail { position: absolute; inset: 0; display: grid; place-items: center; color: #ffcf87; font-size: 14px; padding: 24px; text-align: center; }
+/* Hover tooltip in the galaxy (the only DOM label left; the rest are sprites) */
+.sp-tip { pointer-events: none; transform: translate(12px, -50%); padding: 8px 10px; border-radius: 10px; background: rgba(8, 12, 24, .86); border: 1px solid rgba(140, 170, 255, .3); white-space: nowrap; display: grid; gap: 2px; }
+.sp-tip b { font: 12px ui-monospace, monospace; color: #7df5d2; } .sp-tip span { font-size: 12px; color: #dfe6f5; text-transform: capitalize; } .sp-tip em { font-size: 11px; color: #ffcf87; font-style: normal; }
+@media (max-width: 760px) { .sp-places, .sp-help { display: none; } .sp-stage { top: auto; bottom: 230px; width: auto; left: 16px; } .sp-near { display: none; } .sp-map { width: 140px; height: 140px; } }
