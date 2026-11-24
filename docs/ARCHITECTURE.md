@@ -53,8 +53,9 @@ Dependencies point one way only: `interfaces` → `pipeline` → `models`, `retr
 py -3.14 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-Copy-Item .env.example .env
 ```
+
+Then create a `.env` file in the repository root with at least `LLM_BASE_URL`, `LLM_API_KEY` and `LLM_MODEL` (example in the [README quick start](../README.md#quick-start)); every key is listed under [Configuration](#configuration-env).
 
 The first run downloads the embedding model (~1.2 GB for 0.6B) and the BM25 tokenizer files from Hugging Face.
 
@@ -63,7 +64,7 @@ The first run downloads the embedding model (~1.2 GB for 0.6B) and the BM25 toke
 The `Dockerfile` builds one CPU-only image: the React UI is compiled in a Node stage, and the Python stage installs the CPU build of PyTorch (no CUDA libraries). `compose.yaml` runs it. You need Docker Desktop, or Docker Engine with Compose v2.24 or later.
 
 ```powershell
-Copy-Item .env.example .env       # then fill in the model keys; Compose reads it at run time
+# create .env first (see Setup above); Compose reads it at run time
 docker compose up -d --build      # web UI + API on http://127.0.0.1:8001
 docker compose logs -f app        # the first start downloads the embedding model
 ```
@@ -136,7 +137,10 @@ Results are chunks with IDs like `doc_id#n`.
 
 | Key | Default | Meaning |
 | --- | --- | --- |
-| `EMBEDDING_MODEL` | `Qwen/Qwen3-Embedding-0.6B` | Any sentence-transformers model |
+| `EMBEDDING_PROVIDER` | `local` | `local` loads a sentence-transformers model on this machine; `openai` calls an OpenAI-compatible `/embeddings` endpoint (no local model, but every search sends the question to the provider) |
+| `EMBEDDING_MODEL` | `Qwen/Qwen3-Embedding-0.6B` (local) · `text-embedding-3-small` (openai) | The model, or with `openai` the deployment name |
+| `EMBEDDING_BASE_URL` / `EMBEDDING_API_KEY` | `LLM_BASE_URL` / `LLM_API_KEY` | Only for `openai`, when embeddings use a different endpoint or key |
+| `EMBEDDING_DIMENSIONS` | unset | Optional shorter `text-embedding-3` vectors (for example `512`); creates a separate index |
 | `DATA_DIR` | `data` | Holds `docs\` and `urls.txt` |
 | `VECTORSTORE_PATH` | `data/vectorstore` | Embedded Qdrant files and the ingest manifest |
 | `TOP_K` | `5` | Default number of search hits |

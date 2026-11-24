@@ -71,7 +71,18 @@ function Engine({ x, kind, name, metric, link, state }) {
 
 const Edge = ({ d, state }) => <path d={d} className={`fedge ${state}`} markerEnd={`url(#arrow-${state === "bad" ? "bad" : state ? "on" : "off"})`} />;
 
-export function FlowDiagram({ result, steps, live = false, draftChars = 0, llm = "GPT 6" }) {
+/** The dense embedder for the retrieve box: from the run's config, else from /api/info (`embedding`), else the default. */
+function embedder(result, embedding) {
+  const model = result?.config?.embedding ?? embedding?.model ?? "Qwen3-Embedding";
+  const remote = (result?.config?.embedding_provider ?? embedding?.provider) === "openai";
+  const short = model.split("/").pop();
+  return remote
+    ? { kind: "api · bm25 local", name: short.replace(/^text-embedding-/, "embed-"), link: "1 call" }
+    : { kind: "local · no API", name: `${short.split("-")[0]} + BM25`, link: "local" };
+}
+
+export function FlowDiagram({ result, steps, live = false, draftChars = 0, llm = "GPT 6", embedding }) {
+  const emb = embedder(result, embedding);
   const f = layout({ result, steps, live, draftChars });
   const n = f.nodes;
   const engineState = (node) => (n[node] === "skipped" || n[node] === "idle" ? n[node] : n[node] === "active" ? "active" : "used");
@@ -111,7 +122,7 @@ export function FlowDiagram({ result, steps, live = false, draftChars = 0, llm =
         <Edge d="M533 46 H742 V132" state={f.edges.refusal} />
 
         <Engine x={X.guard} kind="scoring model" name="Arbiter" metric={f.metrics.guard} link="1 call" state={engineState("guard")} />
-        <Engine x={X.retrieve} kind="local · no API" name="Qwen3 + BM25" metric={f.metrics.retrieve} link="local" state={engineState("retrieve")} />
+        <Engine x={X.retrieve} kind={emb.kind} name={emb.name} metric={f.metrics.retrieve} link={emb.link} state={engineState("retrieve")} />
         <Engine x={X.generate} kind="generative model" name={llm} metric={f.metrics.generate} link={n.generate === "skipped" ? "no call" : "1 call"} state={engineState("generate")} />
         <Engine x={X.check} kind="code · no model" name="Grounding rules" metric={f.metrics.check} link="local" state={engineState("check")} />
       </svg>

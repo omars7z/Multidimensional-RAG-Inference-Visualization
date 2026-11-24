@@ -113,6 +113,7 @@ def api_info(request: Request) -> JSONResponse:
     return JSONResponse({
         "topics": sorted({topic(entry, doc_id) for doc_id, entry in manifest.items()}),
         "model": settings.embedding_model,
+        "embedding_provider": settings.embedding_provider,
         "documents": len(manifest),
         "chunks": sum(entry["n_chunks"] for entry in manifest.values()),
         "top_k": settings.top_k,

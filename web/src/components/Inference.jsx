@@ -30,8 +30,9 @@ function Waterfall({ run, insp }) {
     add("retrieve", t.retrieve, "l-local", starts.retrieve);
     if (insp) {
       let s = starts.retrieve;
-      for (const [k, label] of [["embed_dense", "embed question (Qwen3)"], ["embed_sparse", "BM25 terms"], ["search_dense", "dense search"], ["search_sparse", "keyword search"]]) {
-        add(label, insp.timings[k], "l-local", s, true); s += insp.timings[k] || 0;
+      const remote = insp.embedding.remote;
+      for (const [k, label] of [["embed_dense", remote ? "embed question (API call)" : "embed question (local model)"], ["embed_sparse", "BM25 terms"], ["search_dense", "dense search"], ["search_sparse", "keyword search"]]) {
+        add(label, insp.timings[k], k === "embed_dense" && remote ? "l-cloud" : "l-local", s, true); s += insp.timings[k] || 0;
       }
     }
   }
@@ -82,7 +83,7 @@ export function Inference({ lastRun, llm, onBack }) {
   const emb = insp?.embedding;
   const stats = [
     [emb ? emb.tokens.length : "–", "query tokens", "l-local"],
-    [emb ? emb.layers : "–", "embedding layers", "l-local"],
+    [emb ? (emb.layers ?? "hosted") : "–", "embedding layers", emb?.remote ? "l-cloud" : "l-local"],
     [emb ? emb.vector.length.toLocaleString("en-US") : "–", "vector dimensions", "l-local"],
     [insp ? insp.points.length : "–", "candidate chunks", "l-graph"],
     [lastRun?.usage?.output_tokens ? lastRun.usage.output_tokens.toLocaleString("en-US") : "–", "tokens generated", "l-cloud"],
@@ -101,7 +102,8 @@ export function Inference({ lastRun, llm, onBack }) {
           <button className="go" type="submit" disabled={busy}><span>{busy ? "Inspecting…" : "Inspect"}</span></button>
         </form>
         <div className="note"><Icon name="info" />
-          Inspect runs only the local retrieval part (no model API calls) and shows its real numbers.
+          {emb?.remote ? "Inspect runs only the retrieval part (one embeddings API call, no answer model) and shows its real numbers."
+            : "Inspect runs only the local retrieval part (no model API calls) and shows its real numbers."}
           {lastRun ? (runMatches ? " Guard, generation and check values come from your last answer to this question." : " Guard, generation and check values come from your last answer, which was a different question.")
             : " Ask a question on the assistant page to fill in the guard, generation and check stages too."}
         </div>
@@ -120,9 +122,12 @@ export function Inference({ lastRun, llm, onBack }) {
 
       <Section id="embedding" n={3} icon="grid" title="Meaning as numbers: the embedding model" kind="live">
         {insp ? <>
-          <p>{emb.model.split("/").pop()} runs on this machine. The question is cut into tokens, every token flows up
-            through {emb.layers} layers, and the last token, which has attended to all the others, becomes a
-            {" "}{emb.vector.length.toLocaleString("en-US")}-number vector. Alongside it, BM25 keeps the exact words.</p>
+          {emb.remote
+            ? <p>{emb.model.split("/").pop()} runs as an API: the question is sent to the provider, which returns a
+                {" "}{emb.vector.length.toLocaleString("en-US")}-number vector. BM25 still runs on this machine and keeps the exact words.</p>
+            : <p>{emb.model.split("/").pop()} runs on this machine. The question is cut into tokens, every token flows up
+                through {emb.layers} layers, and the last token, which has attended to all the others, becomes a
+                {" "}{emb.vector.length.toLocaleString("en-US")}-number vector. Alongside it, BM25 keeps the exact words.</p>}
           <EmbeddingViz insp={insp} />
         </> : <p className="cap">{busy ? "Running the embedding model…" : "Inspect a question to see its tokens and vector."}</p>}
       </Section>

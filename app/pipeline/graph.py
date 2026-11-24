@@ -207,7 +207,7 @@ def run_config() -> dict:
             "grade_prompt": prompts.GRADE_VERSION, "expand_prompt": prompts.EXPAND_VERSION,
             "rewrite_prompt": prompts.REWRITE_VERSION,
             "llm": settings.llm_model, "judge": "Arbiter" if settings.has_arbiter else "llm-fallback",
-            "embedding": settings.embedding_model, "top_k": settings.top_k, "context_chars": prompts.MAX_CONTEXT_CHARS,
+            "embedding": settings.embedding_model, "embedding_provider": settings.embedding_provider, "top_k": settings.top_k, "context_chars": prompts.MAX_CONTEXT_CHARS,
             **retrieval_config()}
 
 

@@ -46,7 +46,7 @@ export const STAGES = [
     body: "One HTTPS call: the question as state, plus a typed choice question with four described options. The model does one forward pass and returns a calibrated probability per option. It writes no text." },
   { id: "route", title: "route_after_guard picks the next edge", path: ["arbiter", "guard", "route"], code: "app/graph.py · route_after_guard()",
     body: "Risk = P(harmful) + P(prompt_injection). At 0.4 or more it refuses; if out_of_scope is the top class it declines; otherwise the edge goes to retrieve. The guard's step event is queued and the page lights up its first node." },
-  { id: "embed", title: "The question becomes a 1,024-number vector", path: ["retrieve", "qwen"], skip: true, code: "app/retrieval.py · SentenceEmbeddings",
+  { id: "embed", title: "The question becomes a vector", path: ["retrieve", "qwen"], skip: true, code: "app/retrieval.py · SentenceEmbeddings",
     body: "Qwen3-Embedding runs on this machine. An instruction prefix is added, the text is split into tokens, 28 transformer layers process them, and the hidden state of the last token becomes the vector, scaled to length 1." },
   { id: "bm25", title: "Keywords for BM25", path: ["qwen", "bm25"], skip: true, code: "app/retrieval.py · NormalizedSparse",
     body: "In parallel with meaning, exact words count too. Arabic is normalised (diacritics, tatweel, alef and yaa forms, digits), English is stemmed and stop words dropped. Each remaining term is one dimension of a sparse vector." },
@@ -88,8 +88,10 @@ export function details(stage, run, insp) {
       const risk = (p.harmful || 0) + (p.prompt_injection || 0);
       return [["risk", Object.keys(p).length ? `${risk.toFixed(3)} ${risk >= 0.4 ? "≥" : "<"} 0.4` : "–"], ["verdict", run.verdict], ["next", run.verdict === "in_scope" ? "retrieve" : "END (refusal)"]];
     }
-    case "embed": return insp ? [["tokens", `${insp.embedding.tokens.length} (${insp.embedding.prompt_tokens} instruction + question + end)`],
-      ["layers × width", `${insp.embedding.layers} × ${fmt(insp.embedding.hidden)}`], ["pooling", insp.embedding.pooling ?? "last token"],
+    case "embed": return insp ? [...(insp.embedding.remote
+      ? [["model", `${insp.embedding.model} (API)`], ["dimensions", fmt(insp.embedding.vector.length)]]
+      : [["tokens", `${insp.embedding.tokens.length} (${insp.embedding.prompt_tokens} instruction + question + end)`],
+        ["layers × width", `${insp.embedding.layers} × ${fmt(insp.embedding.hidden)}`], ["pooling", insp.embedding.pooling ?? "last token"]]),
       ["first numbers", insp.embedding.vector.slice(0, 4).map((v) => v.toFixed(3)).join(", ") + " …"], ["time", secs(insp.timings.embed_dense)]]
       : [["vector", "inspect a question to see it"]];
     case "bm25": return insp ? [["normalised", clip(insp.bm25.normalized, 48)], ["terms", insp.bm25.terms.join(" · ") || `${insp.bm25.n_terms} terms`], ["time", secs(insp.timings.embed_sparse)]]

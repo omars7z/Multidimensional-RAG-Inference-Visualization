@@ -17,6 +17,9 @@ os.environ.setdefault("TRANSFORMERS_VERBOSITY", "error")
 @dataclass(frozen=True)
 class Settings:
     embedding_model: str
+    embedding_provider: str       # "local" (sentence-transformers on this machine) or "openai" (an /embeddings API)
+    embedding_base_url: str
+    embedding_dimensions: int | None
     data_dir: Path
     vectorstore_path: Path
     top_k: int
@@ -46,6 +49,7 @@ class Settings:
     api_auth_username: str = field(repr=False)
     api_auth_password: str = field(repr=False)
     llm_api_key: str = field(repr=False)
+    embedding_api_key: str = field(repr=False)
     arbiter_api_key: str = field(repr=False)
     langfuse_secret_key: str = field(repr=False)
 
@@ -53,7 +57,13 @@ class Settings:
     def collection(self) -> str:
         """Collection name per embedding model, so vectors of different sizes never mix."""
         short = self.embedding_model.rsplit("/", 1)[-1].lower()
+        if self.embedding_dimensions:
+            short += f"-{self.embedding_dimensions}d"
         return "docs_" + re.sub(r"[^a-z0-9.-]+", "-", short)
+
+    @property
+    def embedding_local(self) -> bool:
+        return self.embedding_provider == "local"
 
     @property
     def has_llm(self) -> bool:
@@ -112,8 +122,17 @@ def _api_auth_credentials() -> tuple[str, str]:
 _api_auth_username, _api_auth_password = _api_auth_credentials()
 
 
+_embedding_provider = _choice("EMBEDDING_PROVIDER", "local", {"local", "openai"})
+
 settings = Settings(
-    embedding_model=os.getenv("EMBEDDING_MODEL", "Qwen/Qwen3-Embedding-0.6B"),
+    # EMBEDDING_PROVIDER=openai calls an OpenAI-compatible /embeddings endpoint (e.g. text-embedding-3-small on Azure);
+    # its URL and key default to the answer model's. Each model gets its own collection, so switching needs an ingest.
+    embedding_model=os.getenv("EMBEDDING_MODEL") or (
+        "text-embedding-3-small" if _embedding_provider == "openai" else "Qwen/Qwen3-Embedding-0.6B"),
+    embedding_provider=_embedding_provider,
+    embedding_base_url=_llm_base_url(os.getenv("EMBEDDING_BASE_URL") or os.getenv("LLM_BASE_URL", "")),
+    embedding_dimensions=int(os.environ["EMBEDDING_DIMENSIONS"]) if os.getenv("EMBEDDING_DIMENSIONS") else None,
+    embedding_api_key=os.getenv("EMBEDDING_API_KEY") or os.getenv("LLM_API_KEY", ""),
     data_dir=_path("DATA_DIR", "data"),
     vectorstore_path=_path("VECTORSTORE_PATH", "data/vectorstore"),
     top_k=int(os.getenv("TOP_K", "5")),

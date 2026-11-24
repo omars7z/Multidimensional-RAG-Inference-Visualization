@@ -47,7 +47,7 @@ function GroundingChecks({ checks: c }) {
 export function Details({ result: r }) {
   const u = r.usage || {}, cfg = r.config;
   return (
-    <section className="card">
+    <div className="details-body">
       <FlowDiagram result={r} llm={r.config.llm} />
       <ul className="why">
         {r.explanation.map((s) => <li key={s.step}><Icon name={STEP_ICONS[s.step]} /><b>{s.step}</b><span>{s.text}</span></li>)}
@@ -66,6 +66,6 @@ export function Details({ result: r }) {
           <span><Icon name="activity" /><a href={r.trace_url} target="_blank" rel="noopener noreferrer">Open trace in Langfuse</a> (PII masked)</span>
         )}
       </div>
-    </section>
+    </div>
   );
 }

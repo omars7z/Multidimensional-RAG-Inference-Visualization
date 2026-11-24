@@ -86,8 +86,44 @@ function LayerGrid({ emb }) {
   );
 }
 
+/** The real query vector as a heat strip, for models whose layers are not visible (API embeddings). */
+function VectorGrid({ v }) {
+  const [hover, setHover] = useState(null);
+  const cols = 64, cell = 9, rows = Math.ceil(v.length / cols);
+  const max = Math.max(...v.map(Math.abs)) || 1;
+  return (
+    <svg className="viz" viewBox={`0 0 ${cols * cell + 12} ${rows * cell + 40}`} role="img" aria-label={`Query vector, ${v.length} numbers`}>
+      <text x={6} y={14} className="k">the real query vector · {v.length.toLocaleString("en-US")} numbers, length 1</text>
+      {v.map((val, i) => (
+        <rect key={i} x={6 + (i % cols) * cell} y={22 + Math.floor(i / cols) * cell} width={cell - 0.8} height={cell - 0.8}
+          className={val >= 0 ? "vpos" : "vneg"} style={{ fillOpacity: 0.12 + 0.88 * Math.min(1, Math.abs(val) / max) }}
+          onPointerEnter={() => setHover(i)} onPointerLeave={() => setHover(null)} />
+      ))}
+      <text x={6} y={rows * cell + 36} className="s">
+        {hover != null ? `dimension ${hover}: ${v[hover].toFixed(4)}` : "orange positive · blue negative · hover a cell"}
+      </text>
+    </svg>
+  );
+}
+
 export function EmbeddingViz({ insp }) {
   const emb = insp.embedding;
+  if (emb.remote) {
+    return (
+      <>
+        {emb.tokens.length > 0 && <>
+          <div className="toks" aria-label="Tokens">
+            {emb.tokens.map((t, i) => <span key={i} title={`token id ${t.id}`} className={i === emb.tokens.length - 1 ? "end" : ""} dir="auto">{show(t.text)}</span>)}
+          </div>
+          <p className="cap">Tokens from tiktoken's cl100k_base, the tokenizer of OpenAI's text-embedding-3 models.</p>
+        </>}
+        <div className="note"><Icon name="info" /><span>{emb.model} runs on the provider's servers, so its layers can't be shown;
+          only the vector it returns is. Switch to <code>EMBEDDING_PROVIDER=local</code> to see tokens × layers.</span></div>
+        <VectorGrid v={emb.vector} />
+        <Bm25 insp={insp} />
+      </>
+    );
+  }
   return (
     <>
       <div className="toks" aria-label="Tokens">
@@ -97,6 +133,13 @@ export function EmbeddingViz({ insp }) {
       </div>
       <p className="cap">Real tokens from the Qwen3 tokenizer: the grey ones are the instruction prefix the model adds to every query; the green one is the end token whose final hidden state is the vector.</p>
       <LayerGrid emb={emb} />
+      <Bm25 insp={insp} />
+    </>
+  );
+}
+
+function Bm25({ insp }) {
+  return (
       <div className="bm25">
         <div><span className="k">BM25 sees</span><code dir="auto">{insp.bm25.normalized}</code></div>
         <Icon name="chevron" />
@@ -104,7 +147,6 @@ export function EmbeddingViz({ insp }) {
         <Icon name="chevron" />
         <div><span className="k">sparse vector</span><b>{insp.bm25.n_terms}</b> non-zero dimensions; Qdrant weights them by IDF, so rare words count more</div>
       </div>
-    </>
   );
 }
 
@@ -128,7 +170,7 @@ export function VectorSpace({ insp }) {
         </div>
         <span className="hint">{pts.length} candidate chunks · top {insp.k} of each ranking linked</span>
       </div>
-      <svg className="viz vmap" viewBox="0 0 780 390" role="img" aria-label="Candidate chunks and the question projected from 1,024 dimensions to 2">
+      <svg className="viz vmap" viewBox="0 0 780 390" role="img" aria-label={`Candidate chunks and the question projected from ${fmt(insp.embedding.vector.length)} dimensions to 2`}>
         <rect x="30" y="14" width="710" height="350" rx="10" className="box" />
         {pts.filter(hot).map((p) => <line key={p.chunk_id} x1={X(qx)} y1={Y(qy)} x2={X(p.x)} y2={Y(p.y)} className={`vlink m-${mode}`} />)}
         {pts.map((p, i) => {
@@ -154,7 +196,7 @@ export function VectorSpace({ insp }) {
             <span>cosine <b>{cur.cosine.toFixed(3)}</b></span><span>dense #{cur.dense_rank ?? "–"}</span><span>BM25 #{cur.sparse_rank ?? "–"}</span>
             <span>fused #{cur.fused_rank ?? "–"}</span>{cur.top_k && <span className="badge b-ok">top {insp.k}</span>}</div>
           <p>{cur.excerpt}…</p>
-        </> : <p className="cap">Hover a point to read the chunk. The map squeezes 1,024 dimensions into 2 (PCA), so distances are approximate; the cosine number is exact.</p>}
+        </> : <p className="cap">Hover a point to read the chunk. The map squeezes {fmt(insp.embedding.vector.length)} dimensions into 2 (PCA), so distances are approximate; the cosine number is exact.</p>}
       </div>
       <table className="state rrf">
         <thead><tr><th>Fused</th><th>Chunk</th><th>Dense rank</th><th>BM25 rank</th><th>1 / (rank + 1), summed</th></tr></thead>

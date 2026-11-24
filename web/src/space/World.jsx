@@ -227,7 +227,7 @@ function GraphHall({ run, on }) {
 function EmbeddingTower({ insp, on }) {
   const rings = useRef();
   const beads = useRef();
-  const sim = insp?.embedding.layer_similarity;
+  const sim = insp?.embedding.layer_similarity?.length ? insp.embedding.layer_similarity : null; // empty for API models
   const layers = sim ? sim.length : 29;
   const level = useMemo(() => {
     if (!sim) return Array.from({ length: 29 }, (_, i) => i / 28);
@@ -235,7 +235,7 @@ function EmbeddingTower({ insp, on }) {
     const lo = Math.min(...end), hi = Math.max(...end);
     return end.map((v) => (v - lo) / (hi - lo || 1));
   }, [sim]);
-  const tokens = insp ? insp.embedding.tokens.slice(insp.embedding.prompt_tokens) : [];
+  const tokens = sim ? insp.embedding.tokens.slice(insp.embedding.prompt_tokens) : [];
   const base = useMemo(() => new Color(COLORS.local), []);
   useFrame(({ clock }, dt) => {
     const sweep = (clock.elapsedTime * (on ? 14 : 4)) % (layers + 6);
@@ -270,7 +270,7 @@ function EmbeddingTower({ insp, on }) {
           );
         })}
       </group>
-      <Label position={[0, top + 4, 0]} title="Embedding tower" sub={insp ? `${insp.embedding.model.split("/").pop()} · ${insp.embedding.layers} layers · ${insp.embedding.vector.length} dims` : "Qwen3-Embedding · 28 layers"} color={COLORS.local} big />
+      <Label position={[0, top + 4, 0]} title="Embedding tower" sub={insp ? `${insp.embedding.model.split("/").pop()} · ${insp.embedding.remote ? "API" : `${insp.embedding.layers} layers`} · ${insp.embedding.vector.length} dims` : "Qwen3-Embedding · 28 layers"} color={COLORS.local} big />
       <Label position={[TOWER.radius + 7, 5, 0]} title="tokens in" sub="the green one is pooled" color={COLORS.local} />
     </group>
   );

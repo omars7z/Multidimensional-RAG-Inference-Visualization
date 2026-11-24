@@ -1,6 +1,6 @@
 /* Immersive view: always a dark space, whatever the page theme. */
 body.sp-lock { overflow: hidden; }
-.space { position: fixed; inset: 0; z-index: 50; background: #02040a; color: #e9edf5; font: 14px/1.5 "Segoe UI", "Noto Sans Arabic", system-ui, sans-serif; overflow: hidden; user-select: none; }
+.space { position: fixed; inset: 0; z-index: 50; background: #02040a; color: #e9edf5; font: 14px/1.5 var(--font); overflow: hidden; user-select: none; }
 .space canvas { display: block; touch-action: none; cursor: grab; }
 .space canvas:active { cursor: grabbing; }
 /* Solid panels, no backdrop blur: blurring a canvas that changes every frame is costly on integrated GPUs. */

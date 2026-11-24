@@ -35,8 +35,10 @@ function stationData(id, run, insp, galaxy) {
     case "browser": return [["question", run?.question ?? insp?.question ?? "–"], ["end to end", run?.client?.total ? `${fmt(Math.round(run.client.total))} ms` : "–"], ["first visible token", run?.client?.ttft ? `${fmt(Math.round(run.client.ttft))} ms` : "–"]];
     case "server": return [["endpoint", "POST /api/ask/stream"], ["format", "NDJSON: step · token · result"]];
     case "graph": return run ? [["verdict", run.verdict], ...["guard", "retrieve", "generate", "check"].filter((n) => run.timings[n] != null).map((n) => [n, `${fmt(Math.round(run.timings[n]))} ms`])] : [["verdict", "ask a question first"]];
-    case "tower": return insp ? [["tokens", insp.embedding.tokens.length], ["layers × width", `${insp.embedding.layers} × ${fmt(insp.embedding.hidden)}`], ["pooling", insp.embedding.pooling ?? "last token"],
-      ["end token at last layer", insp.embedding.layer_similarity.at(-1).at(-1).toFixed(3)]] : [];
+    case "tower": return !insp ? [] : insp.embedding.remote
+      ? [["model", `${insp.embedding.model} (API)`], ["dimensions", fmt(insp.embedding.vector.length)], ["layers", "not visible: runs on the provider"]]
+      : [["tokens", insp.embedding.tokens.length], ["layers × width", `${insp.embedding.layers} × ${fmt(insp.embedding.hidden)}`], ["pooling", insp.embedding.pooling ?? "last token"],
+        ["end token at last layer", insp.embedding.layer_similarity.at(-1).at(-1).toFixed(3)]];
     case "galaxy": return [["chunks in the index", galaxy ? fmt(galaxy.count) : "–"], ...(insp?.points.filter((p) => p.top_k).map((p) => [`#${p.fused_rank} ${p.chunk_id}`, `cosine ${p.cosine.toFixed(3)}`]) ?? [])];
     case "arbiter": return run && Object.keys(run.guard_probs).length ? Object.entries(run.guard_probs).map(([k, v]) => [k.replaceAll("_", " "), v.toFixed(3)]) : [["probabilities", "ask a question first"]];
     case "colossus": return [["input tokens", u.input_tokens ? fmt(u.input_tokens) : "–"], ["output tokens", u.output_tokens ? fmt(u.output_tokens) : "–"], ["reasoning tokens", u.output_token_details?.reasoning != null ? fmt(u.output_token_details.reasoning) : "–"]];

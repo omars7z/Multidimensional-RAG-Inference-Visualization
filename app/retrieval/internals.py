@@ -105,16 +105,45 @@ def _bm25_terms(sparse, text: str) -> list[str]:
         return []
 
 
+def _local_embedding(st, prompt: str, question: str) -> dict:
+    """Tokens, architecture and the per-layer view of a sentence-transformers model loaded on this machine."""
+    ids = st.tokenizer(prompt + question)["input_ids"]
+    n_prompt = len(st.tokenizer(prompt, add_special_tokens=False)["input_ids"]) if prompt else 0
+    config = st[0].auto_model.config
+    return {
+        "remote": False,
+        "layers": getattr(config, "num_hidden_layers", None),
+        "hidden": getattr(config, "hidden_size", None),
+        "heads": getattr(config, "num_attention_heads", None),
+        "vocab": getattr(config, "vocab_size", None),
+        "pooling": getattr(st[1], "pooling_mode", None) if len(st) > 1 else None,
+        "prompt": prompt,
+        "prompt_tokens": n_prompt,
+        "tokens": [{"id": i, "text": st.tokenizer.decode([i])} for i in ids],
+        "layer_similarity": _layer_similarity(st, prompt + question, n_prompt),
+    }
+
+
+def _api_embedding(question: str) -> dict:
+    """An API model's internals are not visible; the tokens come from tiktoken (cl100k_base, used by text-embedding-3)."""
+    try:
+        import tiktoken
+
+        enc = tiktoken.get_encoding("cl100k_base")
+        tokens = [{"id": i, "text": enc.decode([i])} for i in enc.encode(question)]
+    except Exception:  # tiktoken missing or its encoding file not downloadable
+        tokens = []
+    return {"remote": True, "layers": None, "hidden": None, "heads": None, "vocab": None, "pooling": None,
+            "prompt": "", "prompt_tokens": 0, "tokens": tokens, "layer_similarity": []}
+
+
 def inspect(question: str, k: int | None = None) -> dict:
     store = get_store()
     k = k or settings.top_k
     pool = max(4 * k, 20)
     dense_model, sparse_model = store.embeddings, store.sparse_embeddings
-    st = dense_model.model
-    prompt = st.prompts.get(dense_model.query_prompt, "") if dense_model.query_prompt else ""
-    ids = st.tokenizer(prompt + question)["input_ids"]
-    n_prompt = len(st.tokenizer(prompt, add_special_tokens=False)["input_ids"]) if prompt else 0
-    config = st[0].auto_model.config
+    st = dense_model.model  # None for an API model: its tokenizer and layers are not on this machine
+    prompt = st.prompts.get(dense_model.query_prompt, "") if st is not None and dense_model.query_prompt else ""
 
     start = time.perf_counter()
     qvec = dense_model.embed_query(question)
@@ -168,19 +197,9 @@ def inspect(question: str, k: int | None = None) -> dict:
         "question": question,
         "k": k,
         "pool": pool,
-        "embedding": {
-            "model": settings.embedding_model,
-            "layers": getattr(config, "num_hidden_layers", None),
-            "hidden": getattr(config, "hidden_size", None),
-            "heads": getattr(config, "num_attention_heads", None),
-            "vocab": getattr(config, "vocab_size", None),
-            "pooling": getattr(st[1], "pooling_mode", None) if len(st) > 1 else None,
-            "prompt": prompt,
-            "prompt_tokens": n_prompt,
-            "tokens": [{"id": i, "text": st.tokenizer.decode([i])} for i in ids],
-            "layer_similarity": _layer_similarity(st, prompt + question, n_prompt),
-            "vector": [round(v, 4) for v in qvec],
-        },
+        "embedding": (_local_embedding(st, prompt, question) if st is not None else _api_embedding(question))
+        | {"model": settings.embedding_model, "vector": [round(v, 4) for v in qvec]},
+
         "bm25": {"normalized": normalize(question), "terms": _bm25_terms(sparse_model, question),
                  "n_terms": len(sparse.indices)},
         "query_xy": [round(float(xy[0, 0]), 4), round(float(xy[0, 1]), 4)],

@@ -36,6 +36,43 @@ class SentenceEmbeddings(Embeddings):
         return self.model.encode([text], prompt_name=self.query_prompt, normalize_embeddings=True)[0].tolist()
 
 
+class APIEmbeddings(Embeddings):
+    """An OpenAI-compatible /embeddings endpoint (e.g. text-embedding-3-small deployed on Azure).
+
+    Nothing is loaded on this machine; the question text is sent to the provider for every search.
+    """
+
+    query_prompt = None  # these models take the raw text; no instruction prefix
+
+    def __init__(self, model_name: str):
+        from langchain_openai import OpenAIEmbeddings
+
+        if not (settings.embedding_base_url and settings.embedding_api_key):
+            raise RuntimeError("EMBEDDING_PROVIDER=openai needs EMBEDDING_BASE_URL and EMBEDDING_API_KEY "
+                               "(or LLM_BASE_URL and LLM_API_KEY) in .env")
+        self.model = None  # no local weights: /api/inspect skips the layer view
+        self.client = OpenAIEmbeddings(
+            model=model_name, base_url=settings.embedding_base_url, api_key=settings.embedding_api_key,
+            dimensions=settings.embedding_dimensions,
+            # Azure deployment names need not be OpenAI model names, so skip the tiktoken length pre-check;
+            # chunks are far below the 8,191-token input limit.
+            check_embedding_ctx_length=False, chunk_size=256, max_retries=3,
+        )
+
+    def embed_documents(self, texts: list[str]) -> list[list[float]]:
+        return self.client.embed_documents(texts)
+
+    def embed_query(self, text: str) -> list[float]:
+        return self.client.embed_query(text)
+
+
+def make_embeddings() -> Embeddings:
+    """The dense model chosen by EMBEDDING_PROVIDER."""
+    if settings.embedding_local:
+        return SentenceEmbeddings(settings.embedding_model)
+    return APIEmbeddings(settings.embedding_model)
+
+
 class NormalizedSparse(SparseEmbeddings):
     """FastEmbed BM25 over normalize()d text, so Arabic spelling variants match."""
 
@@ -52,7 +89,7 @@ class NormalizedSparse(SparseEmbeddings):
 @lru_cache(maxsize=1)
 def get_store() -> QdrantVectorStore:
     """Open (and on first use create) the on-disk collection; models load once per process."""
-    dense = SentenceEmbeddings(settings.embedding_model)
+    dense = make_embeddings()
     settings.vectorstore_path.mkdir(parents=True, exist_ok=True)
     try:
         client = QdrantClient(path=str(settings.vectorstore_path))
