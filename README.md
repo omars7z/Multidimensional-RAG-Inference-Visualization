@@ -2,45 +2,12 @@
 
 Grounded, cited answers over your documents and listed web pages. Dense embeddings (Qwen3-Embedding on your machine, or `text-embedding-3-small` through an API) and BM25 are fused with RRF inside an embedded Qdrant store on disk, with no Docker and no database server. A LangGraph pipeline runs **guard → retrieve → generate → check**:
 
+![3D ride-along through a live question moving across the LangGraph pipeline](docs/screenshots/27-world-journey-ride-along.webp)
+
 - **guard:** Arbiter classifies the question. Without Arbiter, the answer model acts as the guard.
 - **retrieve:** hybrid search over the local store.
 - **generate:** Arbiter first checks that the passages can answer the question. Only then does GPT 6 write the answer, with `[doc_id#n]` citations.
 - **check:** deterministic tests for citations, numbers and answer language.
-
-## Quick start
-
-You need Python 3.11+ and an OpenAI-compatible endpoint for the answer model (Azure OpenAI works). Node.js is only needed to change the web UI.
-
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-cd web; npm ci; npm run build; cd ..
-```
-
-Create a `.env` file in the repository root. These three keys are the minimum:
-
-```ini
-LLM_BASE_URL=https://<your-resource>/openai/v1
-LLM_API_KEY=<your key>
-LLM_MODEL=<model or deployment name>
-
-# Optional: embed through the same endpoint instead of loading the ~2.5 GB local model
-# EMBEDDING_PROVIDER=openai
-# EMBEDDING_MODEL=text-embedding-3-small
-```
-
-Without the `ARBITER_*` keys, the answer model also acts as the guard; the passage-relevance pre-check that Arbiter adds is then skipped. Every other setting is described under [Configuration](docs/ARCHITECTURE.md#configuration-env).
-
-The repository ships no documents. Add your own, then build the index and start the UI:
-
-- **Files:** put `.md`, `.txt`, `.pdf` or `.docx` files in `data/docs/`.
-- **Web pages:** list URLs one per line in `data/urls.txt` (lines starting with `#` are comments).
-
-```powershell
-python rag.py ingest    # fetch, chunk, embed and index; incremental, so re-run it after adding sources
-python ui.py            # web UI and API on http://127.0.0.1:8001
-```
 
 ## Screenshots
 
@@ -220,6 +187,37 @@ The repository contains code only. Pages listed in `data/urls.txt` are fetched a
 
 The web UI loads each cited source's own favicon from that site, so viewing an answer contacts the sites it cites.
 
-## License
+## Quick start
 
-[MIT](LICENSE). Dependencies keep their own licenses; all of them are permissive (MIT, Apache-2.0, BSD, ISC, and the SIL Open Font License for the bundled fonts).
+You need Python 3.11+ and an OpenAI-compatible endpoint for the answer model (Azure OpenAI works). Node.js is only needed to change the web UI.
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+cd web; npm ci; npm run build; cd ..
+```
+
+Create a `.env` file in the repository root. These three keys are the minimum:
+
+```ini
+LLM_BASE_URL=https://<your-resource>/openai/v1
+LLM_API_KEY=<your key>
+LLM_MODEL=<model or deployment name>
+
+# Optional: embed through the same endpoint instead of loading the ~2.5 GB local model
+# EMBEDDING_PROVIDER=openai
+# EMBEDDING_MODEL=text-embedding-3-small
+```
+
+Without the `ARBITER_*` keys, the answer model also acts as the guard; the passage-relevance pre-check that Arbiter adds is then skipped. Every other setting is described under [Configuration](docs/ARCHITECTURE.md#configuration-env).
+
+The repository ships no documents. Add your own, then build the index and start the UI:
+
+- **Files:** put `.md`, `.txt`, `.pdf` or `.docx` files in `data/docs/`.
+- **Web pages:** list URLs one per line in `data/urls.txt` (lines starting with `#` are comments).
+
+```powershell
+python rag.py ingest    # fetch, chunk, embed and index; incremental, so re-run it after adding sources
+python ui.py            # web UI and API on http://127.0.0.1:8001
+```
