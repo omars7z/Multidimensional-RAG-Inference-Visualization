@@ -1,4 +1,4 @@
-"""GPT Sol 6 chat client: an OpenAI-compatible Responses API endpoint, timeout and bounded retries.
+"""GPT 6 chat client: an OpenAI-compatible Responses API endpoint, timeout and bounded retries.
 
 Temperature is sent only when LLM_TEMPERATURE is set (use 0 where supported); reasoning models reject it.
 """

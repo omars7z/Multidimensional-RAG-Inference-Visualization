@@ -57,7 +57,7 @@ export const STAGES = [
   { id: "prompt", title: "The prompt is assembled", path: ["retrieve", "generate"], skip: true, code: "app/prompts.py · answer_messages()",
     body: "A system message with the answer-v1 rules (documents only, cite [doc_id#n], answer in the question's language, else \"I don't know\"), and a user message with each chunk inside <document id=…> tags, marked as untrusted data, then the question." },
   { id: "prefill", title: "Prefill: the model reads everything at once", path: ["generate", "prefill"], skip: true, code: "app/llm.py · get_llm()",
-    body: "The Responses API request reaches GPT Sol 6. Its tokenizer turns the prompt into tokens, and one parallel pass through every layer computes attention keys and values for all of them: the KV cache." },
+    body: "The Responses API request reaches GPT 6. Its tokenizer turns the prompt into tokens, and one parallel pass through every layer computes attention keys and values for all of them: the KV cache." },
   { id: "reason", title: "Hidden reasoning", path: ["prefill", "decode"], skip: true, code: "remote",
     body: "As a reasoning model it first generates private tokens: they are billed and counted, but never sent back. This is most of the wait before the first visible word." },
   { id: "decode", title: "Decode: one token at a time, streamed", path: ["decode", "generate", "queue", "stream", "reader"], skip: true, code: "app/graph.py · stream()",
@@ -100,7 +100,7 @@ export function details(stage, run, insp) {
       : [["budget", "8,000 characters"]];
     case "prompt": return [["prompt version", run?.config?.answer_prompt ?? "answer-v1"], ["answer language", run ? (run.lang === "ar" ? "Arabic" : "English") : "the question's"],
       ["documents", used.length ? used.map((s) => s.chunk_id).join(", ") : "–"]];
-    case "prefill": return [["model", run?.config?.llm ?? "GPT Sol 6"], ["input tokens", u.input_tokens ? fmt(u.input_tokens) : "–"],
+    case "prefill": return [["model", run?.config?.llm ?? "GPT 6"], ["input tokens", u.input_tokens ? fmt(u.input_tokens) : "–"],
       ["cached tokens", u.input_token_details?.cache_read != null ? fmt(u.input_token_details.cache_read) : "–"]];
     case "reason": return [["reasoning tokens", u.output_token_details?.reasoning != null ? fmt(u.output_token_details.reasoning) : "–"]];
     case "decode": return [["output tokens", u.output_tokens ? fmt(u.output_tokens) : "–"], ["visible answer", run ? `${fmt(run.answer.length)} chars` : "–"], ["generate step", secs(t.generate)]];

@@ -20,7 +20,7 @@ This is a local RAG **retrieval** prototype. It has no generation step, no tests
 
 # Inputs I will provide
 
-- The **GPT Sol 6 endpoint**: base URL, API key and model name. Read them from `.env` as `LLM_BASE_URL`, `LLM_API_KEY` and `LLM_MODEL`. Assume the endpoint is OpenAI-compatible (`langchain_openai.ChatOpenAI` with `base_url`). If it is not, wrap it in a single small adapter in `llm.py`. Never hardcode secrets.
+- The **GPT 6 endpoint**: base URL, API key and model name. Read them from `.env` as `LLM_BASE_URL`, `LLM_API_KEY` and `LLM_MODEL`. Assume the endpoint is OpenAI-compatible (`langchain_openai.ChatOpenAI` with `base_url`). If it is not, wrap it in a single small adapter in `llm.py`. Never hardcode secrets.
 - **Arbiter** access. Read it from `.env` as `ARBITER_BASE_URL`, `ARBITER_API_KEY` and `ARBITER_MODEL`.
 - LangSmith API key, and the Langfuse public key, secret key and host.
 
@@ -116,9 +116,9 @@ Keep these to one small module, `app/guardrails.py`.
 - **Config lives in one place**: `.env`, loaded by `config.py` into a single settings object. Fix the mismatched env names. Remove `settings.json` unless something still needs it.
 - Pin versions in `requirements.txt`. Use Python 3.11+, type hints and short docstrings. Leave no dead code and no commented-out code.
 - This runs on Windows: give PowerShell-friendly commands in the README.
-- **Arbiter is the eval judge.** It is an option-scoring model (a post-trained Qwen3.5-9B): you give it a fixed set of options (yes/no, multiple choice, a rating or a rubric) and it returns a calibrated probability for each option in a single pass. It is much faster and cheaper than GPT Sol 6, its scores barely change when equivalent inputs are reworded or reordered, and it avoids GPT Sol 6 grading its own answers.
+- **Arbiter is the eval judge.** It is an option-scoring model (a post-trained Qwen3.5-9B): you give it a fixed set of options (yes/no, multiple choice, a rating or a rubric) and it returns a calibrated probability for each option in a single pass. It is much faster and cheaper than GPT 6, its scores barely change when equivalent inputs are reworded or reordered, and it avoids GPT 6 grading its own answers.
   - Use it for every rubric-style judgement in the evals.
-  - Use GPT Sol 6 only to generate answers, and as a fallback judge when the `ARBITER_*` keys are not set.
+  - Use GPT 6 only to generate answers, and as a fallback judge when the `ARBITER_*` keys are not set.
   - Do not use it to generate answers. It only chooses between options.
   - Read its API docs before writing the client. It is a structured call: options in, one probability per option out.
 - Check the current docs for LangGraph, LangSmith and the Langfuse Python SDK (v3) before writing integration code. Do not rely on memory for these APIs.
@@ -130,7 +130,7 @@ app/
   config.py      # load .env -> one Settings object
   sources.py     # load files from data/docs/ and pages from data/urls.txt
   retrieval.py   # chunking, embeddings, vector store, hybrid search()
-  llm.py         # GPT Sol 6 chat client (temperature 0, timeout, retries)
+  llm.py         # GPT 6 chat client (temperature 0, timeout, retries)
   arbiter.py    # Arbiter client: arbitrate(question, options) -> {option: prob}
   guardrails.py  # input classification, output checks, PII masking for traces
   prompts.py     # versioned prompt templates (ANSWER_V1, JUDGE_V1, ...)
@@ -168,7 +168,7 @@ data/
 **Prompt engineering**
 - Keep all prompts in `prompts.py` with version names, and keep the system and user messages separate.
 - The answer prompt tells the model to answer only from the provided context, cite `[doc_id]`, and say "I don't know" when the context does not support an answer.
-- Write each judge rubric as one short question with a fixed set of options, for example `faithful: yes / partially / no`. Arbiter scores those options. When GPT Sol 6 is the fallback judge, it uses the same rubric and returns structured output (Pydantic).
+- Write each judge rubric as one short question with a fixed set of options, for example `faithful: yes / partially / no`. Arbiter scores those options. When GPT 6 is the fallback judge, it uses the same rubric and returns structured output (Pydantic).
 
 **Context engineering**
 - Give the context a budget (max chunks and max characters or tokens). Deduplicate chunks and order them by score.
@@ -195,14 +195,14 @@ data/
   - Faithfulness, meaning the answer is grounded in the retrieved context (Arbiter judge).
   - Turn each judgement into a score with probability weighting. For example, the faithfulness score is P(yes) + 0.5 × P(partially). Store the full probabilities too.
   - Flag low-confidence judgements (top option < 0.6) as `needs_review`. Do not count them as passes or fails.
-  - Run a one-off check of how often Arbiter and GPT Sol 6 agree on about 20 cases, and record the result in the README.
+  - Run a one-off check of how often Arbiter and GPT 6 agree on about 20 cases, and record the result in the README.
   - Citation validity (deterministic): every cited ID must be in the retrieved IDs, and there must be at least one citation unless the answer is "I don't know".
 - **Ops metrics**: latency and token usage.
 - **LangSmith**: create or update the dataset from `dataset.jsonl` and run `evaluate(...)` with an experiment prefix that includes the prompt version, so prompt versions can be compared side by side.
 - **Langfuse**: trace every graph run with the LangChain `CallbackHandler`, and attach the eval scores to each trace. To keep setup light, use Langfuse Cloud (free tier). Do not self-host for now, because that needs Docker.
 - Turn each backend on or off independently with env flags (`LANGSMITH_TRACING`, `LANGFUSE_ENABLED`). The pipeline must still run with both turned off and print a local summary table.
 - Report every metric **per language slice** (`ar`, `en`, `cross`), as well as overall, and apply the thresholds to each slice so that a weak Arabic score cannot hide behind a good average.
-- Include Arabic and cross-language cases in the Arbiter vs GPT Sol 6 agreement check, to confirm that the judge is reliable in Arabic.
+- Include Arabic and cross-language cases in the Arbiter vs GPT 6 agreement check, to confirm that the judge is reliable in Arabic.
 
 # Work plan (in order; stop and show me the result after each step)
 
@@ -220,6 +220,6 @@ data/
 
 # How to work with me
 
-- Before writing code, restate the plan in 10 bullets or fewer and list your assumptions, especially about the vector store, the GPT Sol 6 endpoint and the Arbiter API shape.
+- Before writing code, restate the plan in 10 bullets or fewer and list your assumptions, especially about the vector store, the GPT 6 endpoint and the Arbiter API shape.
 - Make the smallest change that meets each step. If you are tempted to add something, leave it out and mention it in one line as a possible next step.
 - Ask me only about real blockers, such as endpoint details or missing keys. For everything else, choose sensible defaults and tell me what you chose.

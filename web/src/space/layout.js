@@ -33,7 +33,7 @@ export const STATIONS = [
     info: "Every chunk in the index, placed in 3D from its real 1,024-number vector. Close points mean similar meaning. The white star is your question; beams reach the chunks hybrid search picked." },
   { id: "arbiter", name: "Arbiter", layer: "cloud", at: [ARBITER[0], 0, ARBITER[2]], radius: 22, fly: ARBITER,
     info: "The Arbiter, a remote scoring model. One forward pass scores four options; the satellites' sizes are the real probabilities it returned for your question." },
-  { id: "colossus", name: "GPT Sol 6", layer: "cloud", at: [COLOSSUS.base[0], 0, COLOSSUS.base[2]], radius: 28, fly: [COLOSSUS.base[0], 22, COLOSSUS.base[2] + 30],
+  { id: "colossus", name: "GPT 6", layer: "cloud", at: [COLOSSUS.base[0], 0, COLOSSUS.base[2]], radius: 28, fly: [COLOSSUS.base[0], 22, COLOSSUS.base[2] + 30],
     info: "The remote answer model. Prefill reads the whole prompt in one pass and fills the KV cache (the spiral); then the decode loop sends one token at a time back down the beam." },
 ];
 

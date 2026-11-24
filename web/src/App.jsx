@@ -106,7 +106,7 @@ export default function App() {
   if (page === "space") {
     return (
       <Suspense fallback={<div className="space"><div className="sp-loading sp-glass">Loading the 3D world…</div></div>}>
-        <Space lastRun={lastRun} llm={info?.llm ?? "GPT Sol 6"} onExit={() => setPage("ask")} />
+        <Space lastRun={lastRun} llm={info?.llm ?? "GPT 6"} onExit={() => setPage("ask")} />
       </Suspense>
     );
   }
@@ -114,8 +114,8 @@ export default function App() {
   return (
     <div className={`wrap${page === "ask" ? "" : " wide"}`}>
       <Header info={info} error={infoError} dark={dark} onToggleTheme={toggleTheme} page={page} onPage={setPage} />
-      {page === "how" && <HowItWorks lastRun={lastRun} llm={info?.llm ?? "GPT Sol 6"} onBack={() => setPage("ask")} />}
-      {page === "inference" && <Inference lastRun={lastRun} llm={info?.llm ?? "GPT Sol 6"} onBack={() => setPage("ask")} />}
+      {page === "how" && <HowItWorks lastRun={lastRun} llm={info?.llm ?? "GPT 6"} onBack={() => setPage("ask")} />}
+      {page === "inference" && <Inference lastRun={lastRun} llm={info?.llm ?? "GPT 6"} onBack={() => setPage("ask")} />}
       {page === "ask" && <>
       <form onSubmit={submit}>
         <label className="sr-only" htmlFor="q">Question</label>
@@ -145,7 +145,7 @@ export default function App() {
       </div>
 
       {view.kind === "empty" && <EmptyState topics={info?.topics ?? []} onTopic={pickTopic} />}
-      {view.kind === "live" && <LiveAnswer draft={view.draft} steps={view.steps} llm={info?.llm ?? "GPT Sol 6"} />}
+      {view.kind === "live" && <LiveAnswer draft={view.draft} steps={view.steps} llm={info?.llm ?? "GPT 6"} />}
       {view.kind === "answer" && <Answer key={view.result.trace_url ?? view.result.answer} result={view.result} replacedDraft={view.replacedDraft} />}
       {view.kind === "search" && (view.hits.length
         ? view.hits.map((h, i) => <Passage key={h.chunk_id} hit={h} rank={i + 1} topScore={view.hits[0].score} />)

@@ -71,7 +71,7 @@ function Engine({ x, kind, name, metric, link, state }) {
 
 const Edge = ({ d, state }) => <path d={d} className={`fedge ${state}`} markerEnd={`url(#arrow-${state === "bad" ? "bad" : state ? "on" : "off"})`} />;
 
-export function FlowDiagram({ result, steps, live = false, draftChars = 0, llm = "GPT Sol 6" }) {
+export function FlowDiagram({ result, steps, live = false, draftChars = 0, llm = "GPT 6" }) {
   const f = layout({ result, steps, live, draftChars });
   const n = f.nodes;
   const engineState = (node) => (n[node] === "skipped" || n[node] === "idle" ? n[node] : n[node] === "active" ? "active" : "used");

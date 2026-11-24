@@ -10,7 +10,7 @@ description: Use when switching or comparing LangSDK models - the answer LLM (Op
   - Reasoning models reject `temperature`: leave `LLM_TEMPERATURE` empty. Set it to `0` only for models that support it.
   - A provider without the Responses API needs one small change in `llm.py` (for example `use_responses_api=False`), not a new abstraction.
   - Check `pytest -m live` (one real call per client), then `--limit 10` evals before and after (`rag-eval-runner`).
-- **Guard/judge** (`app/models/arbiter.py`): Arbiter scores fixed options in one pass and returns probabilities. `ARBITER_MODEL` is the model or deployment name. Without `ARBITER_*` keys, GPT Sol 6 answers with structured output instead:
+- **Guard/judge** (`app/models/arbiter.py`): Arbiter scores fixed options in one pass and returns probabilities. `ARBITER_MODEL` is the model or deployment name. Without `ARBITER_*` keys, GPT 6 answers with structured output instead:
   - Probabilities become one-hot, so the risk sum, `needs_review` and probability-weighted judge scores lose their meaning.
   - The relevance gate is skipped (`grade_context` returns `{}`).
   - Eval results record `judge: llm-fallback`. Never compare them with Arbiter runs.

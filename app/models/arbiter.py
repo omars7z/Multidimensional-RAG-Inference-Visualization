@@ -1,7 +1,7 @@
 """Arbiter client: arbitrate(state, instructions, options) -> {option: probability}.
 
 Arbiter scores a fixed set of options in one pass; it never generates text. Several questions about the
-same state share one request (arbitrate_many). When the ARBITER_* keys are not set, GPT Sol 6 answers the
+same state share one request (arbitrate_many). When the ARBITER_* keys are not set, GPT 6 answers the
 same questions with structured output (a one-hot distribution).
 """
 import time

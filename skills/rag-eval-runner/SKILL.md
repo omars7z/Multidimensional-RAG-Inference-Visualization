@@ -10,7 +10,7 @@ description: Use when running, reading or comparing LangSDK evaluations (evals/r
   1. `pytest`: offline, no models. Must pass before any eval.
   2. `python -m evals.run_eval --retrieval-only`: hit@k, recall@k, MRR. No model calls, free.
   3. `python -m evals.run_eval --limit 5 --no-judge`: end to end on 5 rows, deterministic checks only.
-  4. `python -m evals.run_eval`: full run with judges. The README puts a full run at about 26 GPT Sol 6 calls and 90 Arbiter calls. Tell the user before starting one.
+  4. `python -m evals.run_eval`: full run with judges. The README puts a full run at about 26 GPT 6 calls and 90 Arbiter calls. Tell the user before starting one.
 - `evals/dataset.jsonl` may not exist yet. Then pass `--dataset evals/candidates.jsonl` and say the results are indicative (draft rows, unreviewed). See the `eval-dataset-curation` skill.
 - Each run writes `evals/results/<timestamp>_<mode>.json` with `config`, `summary`, `failures` and `rows`. Exit code 1 means a threshold failed. Quote the failing lines, for example `cross.mrr = 0.27 < 0.6`.
 - Gating is per slice (`ar`, `en`, `cross`, `overall`) plus global safety/abstention rates. A weak slice is a failure even when `overall` passes. `--retrieval-only` checks only the retrieval thresholds.

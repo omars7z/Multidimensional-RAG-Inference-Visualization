@@ -1,5 +1,5 @@
 // How a remote generative model produces the answer: prefill, hidden reasoning, then decode one token at a time.
-// Token counts come from the last run; GPT Sol 6's tokenizer, layers and logits are not exposed, so token
+// Token counts come from the last run; GPT 6's tokenizer, layers and logits are not exposed, so token
 // boundaries, candidate scores and attention weights here are simulated and labelled as such.
 import { useEffect, useMemo, useState } from "react";
 import { Icon } from "../icons.jsx";

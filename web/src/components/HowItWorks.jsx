@@ -58,12 +58,12 @@ function ArbiterViz({ run }) {
   );
 }
 
-/** GPT Sol 6: system rules + untrusted documents + question in; hidden reasoning, then streamed text out. */
+/** GPT 6: system rules + untrusted documents + question in; hidden reasoning, then streamed text out. */
 function GenerationViz({ run }) {
   const chunks = run?.sources.filter((s) => s.used).length;
   const usage = run?.usage?.input_tokens ? run.usage : null;
   return (
-    <svg className="viz" viewBox="0 0 760 210" role="img" aria-label="GPT Sol 6 receives rules, documents and the question, reasons, then streams a cited answer">
+    <svg className="viz" viewBox="0 0 760 210" role="img" aria-label="GPT 6 receives rules, documents and the question, reasons, then streams a cited answer">
       <ArrowDefs />
       <rect className="box" x="10" y="12" width="250" height="52" rx="10" />
       <text x="24" y="32" className="k">system message · answer-v1</text>
@@ -77,7 +77,7 @@ function GenerationViz({ run }) {
       <text x="24" y="184" className="s">{run ? clip(run.question, 40) : "answer in the question's language"}</text>
       <Arrow d="M262 38 H280 V96 H294" /><Arrow d="M262 104 H294" /><Arrow d="M262 170 H280 V112 H294" />
       <rect className="box info" x="298" y="66" width="150" height="76" rx="10" />
-      <text x="373" y="92" textAnchor="middle" className="t">GPT Sol 6</text>
+      <text x="373" y="92" textAnchor="middle" className="t">GPT 6</text>
       <text x="373" y="110" textAnchor="middle" className="s">Responses API</text>
       <text x="373" y="126" textAnchor="middle" className="s">{usage ? `${fmt(usage.input_tokens)} tokens in` : "reasoning model"}</text>
       <Arrow d="M450 104 H470" />
